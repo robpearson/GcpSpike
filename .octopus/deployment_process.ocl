@@ -1,0 +1,127 @@
+step "production-approval" {
+    name = "Production Approval"
+
+    action {
+        action_type = "Octopus.Manual"
+        environments = ["production"]
+        properties = {
+            Octopus.Action.Manual.BlockConcurrentDeployments = "False"
+            Octopus.Action.Manual.Instructions = "Has this change request been approved? "
+            Octopus.Action.Manual.ResponsibleTeamIds = "global/everyone"
+        }
+    }
+}
+
+step "run-database-migrations" {
+    name = "Run database migrations"
+
+    action {
+        action_type = "Octopus.GoogleCloudScripting"
+        properties = {
+            Octopus.Action.GoogleCloud.ImpersonateServiceAccount = "False"
+            Octopus.Action.GoogleCloud.Project = "#{MemberPortal.GCP.Project}"
+            Octopus.Action.GoogleCloud.Region = "#{MemberPortal.GCP.Region}"
+            Octopus.Action.GoogleCloud.UseVMServiceAccount = "True"
+            Octopus.Action.GoogleCloud.Zone = "#{MemberPortal.GCP.Zone}"
+            Octopus.Action.Script.ScriptBody = "Write-Host \"TODO\""
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "hosted-ubuntu"
+    }
+}
+
+step "deploy-legacy-monolith-service" {
+    name = "Deploy Legacy Monolith Service"
+    properties = {
+        Octopus.Action.TargetRoles = "memberportal-legacy-service"
+    }
+
+    action {
+        action_type = "Octopus.IIS"
+        properties = {
+            Octopus.Action.EnabledFeatures = ",Octopus.Features.IISWebSite,Octopus.Features.ConfigurationTransforms,Octopus.Features.ConfigurationVariables"
+            Octopus.Action.IISWebSite.ApplicationPoolFrameworkVersion = "v4.0"
+            Octopus.Action.IISWebSite.ApplicationPoolIdentityType = "ApplicationPoolIdentity"
+            Octopus.Action.IISWebSite.ApplicationPoolName = "#{MemberPortal.IIS.AppPool}"
+            Octopus.Action.IISWebSite.Bindings = "[{\"protocol\":\"http\",\"ipAddress\":\"*\",\"port\":\"#{MemberPortal.IIS.Website.HttpPort}\",\"host\":\"#{MemberPortal.IIS.Website.HttpHostName}\",\"thumbprint\":null,\"certificateVariable\":null,\"requireSni\":\"False\",\"enabled\":\"True\"}]"
+            Octopus.Action.IISWebSite.CreateOrUpdateWebSite = "True"
+            Octopus.Action.IISWebSite.DeploymentType = "webSite"
+            Octopus.Action.IISWebSite.EnableAnonymousAuthentication = "True"
+            Octopus.Action.IISWebSite.EnableBasicAuthentication = "False"
+            Octopus.Action.IISWebSite.EnableWindowsAuthentication = "False"
+            Octopus.Action.IISWebSite.StartApplicationPool = "True"
+            Octopus.Action.IISWebSite.StartWebSite = "True"
+            Octopus.Action.IISWebSite.WebApplication.ApplicationPoolFrameworkVersion = "v4.0"
+            Octopus.Action.IISWebSite.WebApplication.ApplicationPoolIdentityType = "ApplicationPoolIdentity"
+            Octopus.Action.IISWebSite.WebRootType = "packageRoot"
+            Octopus.Action.IISWebSite.WebSiteName = "#{MemberPortal.IIS.Website}"
+            Octopus.Action.Package.AutomaticallyRunConfigurationTransformationFiles = "True"
+            Octopus.Action.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings = "True"
+            Octopus.Action.Package.DownloadOnTentacle = "False"
+            Octopus.Action.Package.FeedId = "octopus-server-built-in"
+            Octopus.Action.Package.PackageId = "RandomQuotes"
+        }
+        worker_pool_variable = ""
+
+        packages {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "RandomQuotes"
+            properties = {
+                SelectionMode = "immediate"
+            }
+        }
+    }
+}
+
+step "deploy-front-end-helm-chart" {
+    name = "Deploy front end (Helm chart) "
+    properties = {
+        Octopus.Action.TargetRoles = "member-portal"
+    }
+
+    action {
+        action_type = "Octopus.HelmChartUpgrade"
+        properties = {
+            Octopus.Action.Helm.ClientVersion = "V3"
+            Octopus.Action.Helm.Namespace = "MemberPortal.K8s.Namespace"
+            Octopus.Action.Helm.ResetValues = "True"
+            Octopus.Action.Package.DownloadOnTentacle = "False"
+            Octopus.Action.Package.FeedId = "octopus-server-built-in"
+            Octopus.Action.Package.PackageId = "RandomQuotes"
+            Octopus.Action.Script.ScriptSource = "Package"
+        }
+        worker_pool_variable = ""
+
+        packages {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "RandomQuotes"
+            properties = {
+                SelectionMode = "immediate"
+            }
+        }
+    }
+}
+
+step "microsoft-teams-post-a-message" {
+    name = "Microsoft Teams - Post a message"
+
+    action {
+        environments = ["test", "production"]
+        properties = {
+            Body = "For more information, please see [deployment details](#{if Octopus.Web.ServerUri}#{Octopus.Web.ServerUri}#{else}#{Octopus.Web.BaseUrl}#{/if}#{Octopus.Web.DeploymentLink})!"
+            Color = "Blue"
+            HookUrl = "#{Teams.Notification.Webhook.Url}"
+            Octopus.Action.Template.Id = "ActionTemplates-3861"
+            Octopus.Action.Template.Version = "24"
+            TeamsPostMessage.RetryCount = "1"
+            TeamsPostMessage.RetryDelay = "100"
+            TeamsPostMessage.RetryPosting = "False"
+            Timeout = "60"
+            Title = "#{Octopus.Project.Name} #{Octopus.Release.Number} deployed to #{Octopus.Environment.Name}#{if Octopus.Deployment.Tenant.Id} for #{Octopus.Deployment.Tenant.Name}#{/if}"
+        }
+        worker_pool = "hosted-ubuntu"
+    }
+}
