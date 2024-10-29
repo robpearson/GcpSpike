@@ -8,6 +8,7 @@ step "production-approval" {
             Octopus.Action.Manual.BlockConcurrentDeployments = "False"
             Octopus.Action.Manual.Instructions = "Has this change request been approved? "
             Octopus.Action.Manual.ResponsibleTeamIds = "global/everyone"
+            Octopus.Action.RunOnServer = "false"
         }
     }
 }
@@ -39,6 +40,7 @@ step "deploy-legacy-monolith-service" {
 
     action {
         action_type = "Octopus.IIS"
+        is_disabled = true
         properties = {
             Octopus.Action.EnabledFeatures = ",Octopus.Features.IISWebSite,Octopus.Features.ConfigurationTransforms,Octopus.Features.ConfigurationVariables"
             Octopus.Action.IISWebSite.ApplicationPoolFrameworkVersion = "v4.0"
@@ -61,6 +63,7 @@ step "deploy-legacy-monolith-service" {
             Octopus.Action.Package.DownloadOnTentacle = "False"
             Octopus.Action.Package.FeedId = "octopus-server-built-in"
             Octopus.Action.Package.PackageId = "RandomQuotes"
+            Octopus.Action.RunOnServer = "false"
         }
         worker_pool_variable = ""
 
@@ -83,6 +86,7 @@ step "deploy-front-end-helm-chart" {
 
     action {
         action_type = "Octopus.HelmChartUpgrade"
+        is_disabled = true
         properties = {
             Octopus.Action.Helm.ClientVersion = "V3"
             Octopus.Action.Helm.Namespace = "MemberPortal.K8s.Namespace"
@@ -90,6 +94,7 @@ step "deploy-front-end-helm-chart" {
             Octopus.Action.Package.DownloadOnTentacle = "False"
             Octopus.Action.Package.FeedId = "octopus-server-built-in"
             Octopus.Action.Package.PackageId = "RandomQuotes"
+            Octopus.Action.RunOnServer = "false"
             Octopus.Action.Script.ScriptSource = "Package"
         }
         worker_pool_variable = ""
@@ -110,6 +115,7 @@ step "microsoft-teams-post-a-message" {
 
     action {
         environments = ["test", "production"]
+        is_disabled = true
         properties = {
             Body = "For more information, please see [deployment details](#{if Octopus.Web.ServerUri}#{Octopus.Web.ServerUri}#{else}#{Octopus.Web.BaseUrl}#{/if}#{Octopus.Web.DeploymentLink})!"
             Color = "Blue"
