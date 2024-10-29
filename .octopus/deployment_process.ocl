@@ -13,6 +13,39 @@ step "production-approval" {
     }
 }
 
+step "run-terraform" {
+    name = "Run Terraform"
+
+    action {
+        action_type = "Octopus.TerraformApply"
+        is_disabled = true
+        properties = {
+            Octopus.Action.GoogleCloud.ImpersonateServiceAccount = "False"
+            Octopus.Action.GoogleCloud.Project = "#{MemberPortal.GCP.Project}"
+            Octopus.Action.GoogleCloud.Region = "#{MemberPortal.GCP.Region}"
+            Octopus.Action.GoogleCloud.UseVMServiceAccount = "False"
+            Octopus.Action.GoogleCloud.Zone = "#{MemberPortal.GCP.Zone}"
+            Octopus.Action.GoogleCloudAccount.Variable = "MemberPortal.GCP.Account"
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Terraform.AllowPluginDownloads = "True"
+            Octopus.Action.Terraform.AzureAccount = "False"
+            Octopus.Action.Terraform.GoogleCloudAccount = "True"
+            Octopus.Action.Terraform.ManagedAccount = "None"
+            Octopus.Action.Terraform.PlanJsonOutput = "False"
+            Octopus.Action.Terraform.RunAutomaticFileSubstitution = "True"
+            Octopus.Action.Terraform.Template = <<-EOT
+                resource "null_resource" "default" {
+                  provisioner "local-exec" {
+                    command = "echo 'Hello World'"
+                  }
+                }
+                EOT
+            Octopus.Action.Terraform.TemplateParameters = "{}"
+        }
+        worker_pool_variable = ""
+    }
+}
+
 step "run-database-migrations" {
     name = "Run database migrations"
 
