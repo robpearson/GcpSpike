@@ -149,7 +149,7 @@ step "deploy-front-end-helm-chart" {
 }
 
 step "microsoft-teams-post-a-message" {
-    name = "Microsoft Teams - Post a message"
+    name = "Notify Platform team"
 
     action {
         environments = ["test", "production"]
