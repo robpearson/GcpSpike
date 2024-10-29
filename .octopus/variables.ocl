@@ -1,0 +1,11 @@
+variable "#{MemberPortal.GCP.Account}" {
+    type = "GoogleCloudAccount"
+
+    value "gcp-developer-playground" {
+        environment = ["development", "test"]
+    }
+
+    value "gcp-developer-playground" {
+        environment = ["production"]
+    }
+}
