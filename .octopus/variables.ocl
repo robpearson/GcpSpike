@@ -1,11 +1,23 @@
-variable "#{MemberPortal.GCP.Account}" {
-    type = "GoogleCloudAccount"
+variable "MemberPortal.GCP.Project" {
+    value "kubernetes-demo-198002" {}
+}
 
-    value "gcp-developer-playground" {
-        environment = ["development", "test"]
-    }
+variable "MemberPortal.GCP.Region" {
+    value "australia-southeast1" {}
+}
+
+variable "MemberPortal.GCP.Account" {
+    type = "GoogleCloudAccount"
 
     value "gcp-developer-playground" {
         environment = ["production"]
     }
+
+    value "gcp-developer-playground" {
+        environment = ["development", "test"]
+    }
+}
+
+variable "MemberPortal.GCP.Zone" {
+    value "a" {}
 }
