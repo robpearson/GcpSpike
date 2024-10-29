@@ -18,7 +18,6 @@ step "run-terraform" {
 
     action {
         action_type = "Octopus.TerraformApply"
-        is_disabled = true
         properties = {
             Octopus.Action.GoogleCloud.ImpersonateServiceAccount = "False"
             Octopus.Action.GoogleCloud.Project = "#{MemberPortal.GCP.Project}"
@@ -81,7 +80,6 @@ step "deploy-legacy-monolith-service" {
 
     action {
         action_type = "Octopus.IIS"
-        is_disabled = true
         properties = {
             Octopus.Action.EnabledFeatures = ",Octopus.Features.IISWebSite,Octopus.Features.ConfigurationTransforms,Octopus.Features.ConfigurationVariables"
             Octopus.Action.IISWebSite.ApplicationPoolFrameworkVersion = "v4.0"
@@ -127,7 +125,6 @@ step "deploy-front-end-helm-chart" {
 
     action {
         action_type = "Octopus.HelmChartUpgrade"
-        is_disabled = true
         properties = {
             Octopus.Action.Helm.ClientVersion = "V3"
             Octopus.Action.Helm.Namespace = "MemberPortal.K8s.Namespace"
@@ -156,7 +153,6 @@ step "microsoft-teams-post-a-message" {
 
     action {
         environments = ["test", "production"]
-        is_disabled = true
         properties = {
             Body = "For more information, please see [deployment details](#{if Octopus.Web.ServerUri}#{Octopus.Web.ServerUri}#{else}#{Octopus.Web.BaseUrl}#{/if}#{Octopus.Web.DeploymentLink})!"
             Color = "Blue"
